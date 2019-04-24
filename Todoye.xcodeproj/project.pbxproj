@@ -85,7 +85,6 @@
 		84BBB4522270DD1B00A82915 /* View */ = {
 			isa = PBXGroup;
 			children = (
-				840939B7226FBBFD002CDFBF /* LaunchScreen.storyboard */,
 				840939B2226FBBFA002CDFBF /* Main.storyboard */,
 			);
 			path = View;
@@ -94,6 +93,7 @@
 		84BBB4552270E38D00A82915 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				840939B7226FBBFD002CDFBF /* LaunchScreen.storyboard */,
 				840939B5226FBBFD002CDFBF /* Assets.xcassets */,
 			);
 			path = "Supporting Files";
