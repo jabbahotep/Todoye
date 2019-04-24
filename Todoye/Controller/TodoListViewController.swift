@@ -10,7 +10,7 @@ import UIKit
 
 class TodoListViewController: UITableViewController {
 
-    var itemArray : [String] = []
+    var itemArray : [Item] = []
     let defaults = UserDefaults.standard
   
     @IBAction func addItem(_ sender: UIBarButtonItem) {
@@ -18,7 +18,8 @@ class TodoListViewController: UITableViewController {
         let alert = UIAlertController(title: "New ToDo Item", message: "", preferredStyle: .alert)
         let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
             if textField.text! != "" {
-                self.itemArray.append(textField.text!)
+                let item = Item(itemTitle: textField.text!, itemCompleted: false)
+                self.itemArray.append(item)
                 self.defaults.set(self.itemArray, forKey: "ToDoList")
                 self.tableView.reloadData()
             }
@@ -35,7 +36,7 @@ class TodoListViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
-        if let arr = defaults.array(forKey: "ToDoList") as! [String] {
+        if let arr = defaults.array(forKey: "ToDoList") as! [Item]? {
             itemArray = arr
         }
     }
@@ -45,19 +46,15 @@ class TodoListViewController: UITableViewController {
     }
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
-        cell.textLabel?.text = itemArray[indexPath.row]
+        let item = itemArray[indexPath.row]
+        cell.textLabel?.text = item.title
+        cell.accessoryType = item.completed ? .checkmark : .none
         return cell
     }
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let cell = tableView.cellForRow(at: indexPath)
-        if cell != nil {
-            if cell!.accessoryType == .none {
-                print("Not Selected")
-                cell?.accessoryType = .checkmark
-            } else {
-                print("Selected")
-                cell?.accessoryType = .none
-            }
+        if let _ = tableView.cellForRow(at: indexPath) {
+            itemArray[indexPath.row].completed = !itemArray[indexPath.row].completed
+            tableView.reloadData()
         }
         tableView.deselectRow(at: indexPath, animated: true)
     }
