@@ -8,8 +8,9 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
 
-class TodoListViewController: UITableViewController {
+class TodoListViewController: SwipeTableViewController {
     
     let realm = try! Realm()
 
@@ -55,9 +56,43 @@ class TodoListViewController: UITableViewController {
         // Do any additional setup after loading the view.
         itemSearch.delegate = self
     }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        
+        guard let hexColor = category?.bgcolor else {
+            fatalError("Category has no background color set")
+        }
+        guard let navBar = navigationController?.navigationBar else {
+            fatalError("Cannot get navigation bar")
+        }
+        guard let bgColor = UIColor(hexString: hexColor) else {
+            fatalError("Cannot get UIColor from category color string")
+        }
+        title = category?.name
+        let fgColor = ContrastColorOf(bgColor, returnFlat: true)
+        navBar.barTintColor = bgColor
+        navBar.tintColor = fgColor
+        navBar.titleTextAttributes = [NSAttributedString.Key.foregroundColor: fgColor]
+        navBar.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor: fgColor]
+        itemSearch.barTintColor = bgColor
+        itemSearch.layer.borderColor = bgColor.cgColor
+        itemSearch.layer.borderWidth = 1
+    }
+    override func viewWillDisappear(_ animated: Bool) {
+        guard let bgColor = UIColor(hexString: "1D9BF6") else {
+            fatalError("Cannot get UIColor from static color string")
+        }
+        guard let navBar = navigationController?.navigationBar else {
+            fatalError("Cannot get navigation bar")
+        }
+        let fgColor = ContrastColorOf(bgColor, returnFlat: true)
+        navBar.barTintColor = bgColor
+        navBar.tintColor = fgColor
+        navBar.titleTextAttributes = [NSAttributedString.Key.foregroundColor: fgColor]
+        navBar.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor: fgColor]
+    }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        print(itemArray?.count)
         if let cnt = itemArray?.count {
             return cnt > 0 ? cnt : 0
         } else {
@@ -65,10 +100,13 @@ class TodoListViewController: UITableViewController {
         }
     }
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         if let item = itemArray?[indexPath.row] {
             cell.textLabel?.text = item.title
             cell.accessoryType = item.completed ? .checkmark : .none
+            cell.backgroundColor = UIColor(hexString: category!.bgcolor)!.darken(byPercentage: CGFloat(indexPath.row) / CGFloat(itemArray!.count))
+            cell.tintColor = ContrastColorOf(cell.backgroundColor!, returnFlat: true)
+            cell.textLabel?.textColor = cell.tintColor
         } else {
             cell.textLabel?.text = "No items added"
         }
@@ -96,6 +134,17 @@ class TodoListViewController: UITableViewController {
             itemArray = category?.items.sorted(byKeyPath: "createdAt", ascending: true)
         }
         tableView.reloadData()
+    }
+    override func updateModel(at: IndexPath) {
+        do {
+            try self.realm.write{
+                if let item = self.itemArray?[at.row] {
+                    self.realm.delete(item)
+                }
+            }
+        } catch {
+            print("Error deleting category: \(error)")
+        }
     }
 }
 
